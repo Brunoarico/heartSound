@@ -5,13 +5,15 @@ from pythonosc import udp_client
 import threading
 from unittest.mock import Mock
 import time
-
+import random as r
 '''Funcao generator que cria o mock da saida serial,
 n e o valor do coracao setado para 1 na string'''
 
-def mock_gen(n):
+def mock_gen():
     max, now = 7, 0
     while(True):
+        n = int(r.uniform(0 ,6))
+
         if(now == max):
             now = 0
             yield "\n".encode('utf-8')
@@ -21,7 +23,7 @@ def mock_gen(n):
         else:
             now+=1
             yield "0".encode('utf-8')
-
+        time.sleep(0.1)
 
 class Serial2osc:
     def __init__(self, ser_port ="/dev/ttyACM0", b_rate="115200", mock=False):
@@ -35,7 +37,8 @@ class Serial2osc:
                     timeout=0)
         else:
             self.ser = Mock()
-            self.ser.read = Mock(return_value=next(mock_gen(0)), side_effect = mock_gen(0)) # as you use a decode call
+            self.ser.read = Mock(return_value=next(mock_gen()), side_effect = mock_gen()) # as you use a decode call
+            self.ser.close = Mock()
         self.run = True
 
     '''Faz a leitura da serial e manda a mensagem osc'''
@@ -65,8 +68,7 @@ class Serial2osc:
     '''para tudo e fecha a serial'''
     def stop(self):
             self.run = False
-            print(self.run)
-            ser.close()
+            self.ser.close()
 
 if __name__ == "__main__":
 
